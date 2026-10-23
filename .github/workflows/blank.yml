@@ -1,0 +1,27 @@
+name: Windows-VPS
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    steps:
+    - name: Baixando o Ngrok
+      run: |
+        Invoke-WebRequest https://equinox.io -OutFile ngrok.zip
+        Expand-Archive ngrok.zip
+    - name: Autenticando o Ngrok
+      run: .\ngrok\ngrok.exe authtoken NGROK_AUTH_TOKEN
+    - name: Ativando o Acesso Remoto
+      run: |
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+    - name: Criando o Túnel do PC Virtual
+      run: Start-Process .\ngrok\ngrok.exe -ArgumentList "tcp 3389"
+    - name: Mantendo a Máquina Viva
+      run: |
+        $seconds = 21600
+        Start-Sleep -Seconds $seconds
+        
