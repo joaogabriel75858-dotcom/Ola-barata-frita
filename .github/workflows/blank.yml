@@ -1,4 +1,4 @@
-8name: Windows-VPS
+name: Windows-VPS-Tailscale
 
 on: workflow_dispatch
 
@@ -8,19 +8,22 @@ jobs:
     timeout-minutes: 360
 
     steps:
-    - name: Baixando o Ngrok
+    - name: Instalando o Tailscale
       run: |
-        Invoke-WebRequest https://equinox.io -OutFile ngrok.zip
-        Expand-Archive ngrok.zip
-    - name: Autenticando o Ngrok
-      run: .\ngrok\ngrok.exe authtoken tskey-auth-kKXK18d4ey11CNTRL-Wa1FND3HQReADGkxKpDcQe2gdCpucMx9K
-    - name: Ativando o Acesso Remoto
+        choco install tailscale -y
+        refreshenv
+
+    - name: Conectando ao Tailscale
+      run: tailscale up --authkey tskey-auth-kKXK18d4ey11CNTRL-Wa1FND3HQReADGkxKpDcQe2gdCpucMx9K
+
+    - name: Ativando o Acesso Remoto (RDP)
       run: |
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-    - name: Criando o Túnel do PC Virtual
-      run: Start-Process .\ngrok\ngrok.exe -ArgumentList "tcp 3389"
-    - name: Mantendo a Máquina Viva
+        net user administrator SenhaGamer123# /add
+        net localgroup administrators administrator /add
+
+    - name: Mantendo a Maquina Viva
       run: |
         $seconds = 21600
         Start-Sleep -Seconds $seconds
